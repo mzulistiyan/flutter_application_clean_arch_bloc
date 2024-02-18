@@ -5,4 +5,5 @@ class UrlConstant {
   static const String logout = '/auth/logout';
 
   static const String assessment = '/assessments';
+  static const String assessmentDetail = '/assessments/question';
 }

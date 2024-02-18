@@ -16,6 +16,7 @@ class AssessmentModel extends Equatable {
   DateTime? assessmentDate;
   String? description;
   String? type;
+  DateTime? createdAt;
 
   AssessmentModel({
     this.id,
@@ -23,6 +24,7 @@ class AssessmentModel extends Equatable {
     this.assessmentDate,
     this.description,
     this.type,
+    this.createdAt,
   });
 
   factory AssessmentModel.fromJson(Map<String, dynamic> json) => AssessmentModel(
@@ -31,6 +33,7 @@ class AssessmentModel extends Equatable {
         assessmentDate: json["assessment_date"] == null ? null : DateTime.parse(json["assessment_date"]),
         description: json["description"],
         type: json["type"],
+        createdAt: json["created_at"] == null ? null : DateTime.parse(json["created_at"]),
       );
 
   Assessment toEntity() {
@@ -40,6 +43,7 @@ class AssessmentModel extends Equatable {
       assessmentDate: assessmentDate,
       description: description,
       type: type,
+      createdAt: createdAt,
     );
   }
 
@@ -49,6 +53,7 @@ class AssessmentModel extends Equatable {
         "assessment_date": assessmentDate?.toIso8601String(),
         "description": description,
         "type": type,
+        "created_at": createdAt?.toIso8601String(),
       };
 
   @override

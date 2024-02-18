@@ -6,6 +6,7 @@ class Assessment extends Equatable {
   final DateTime? assessmentDate;
   final String? description;
   final String? type;
+  final DateTime? createdAt;
 
   const Assessment({
     this.id,
@@ -13,8 +14,9 @@ class Assessment extends Equatable {
     this.assessmentDate,
     this.description,
     this.type,
+    this.createdAt,
   });
 
   @override
-  List<Object?> get props => [id, name, assessmentDate, description, type];
+  List<Object?> get props => [id, name, assessmentDate, description, type, createdAt];
 }
