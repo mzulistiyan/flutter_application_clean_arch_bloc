@@ -5,7 +5,9 @@ class ColorConstant {
   static Color secondaryColor = const Color(0xFFEEF6FF);
   static Color greenColor = const Color(0xff107C41);
   static Color blackColor = Colors.black;
-  static Color greyColor = const Color(0xFFF4F3F1);
+  static Color greyColor = const Color(0xFFD6E4EC);
+  static Color greyTextColor = const Color(0xFFB9B9B9);
+
   // static const Map<int, Color> primaryColors = {
   //   50: Color(0xFFDEEEF7),
   //   100: Color(0xFFACD3EC),

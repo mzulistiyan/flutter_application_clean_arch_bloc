@@ -1,4 +1,6 @@
+import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
+import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 import 'package:xml/xml.dart';
@@ -19,6 +21,7 @@ class DioClient {
   factory DioClient({
     Logger? logger,
     SharedPrefClient? sharedPrefClient,
+    CookieJar? cookieJar,
   }) {
     if (logger != null) {
       _instance._dio.interceptors.add(
@@ -26,7 +29,9 @@ class DioClient {
           logger: logger,
         ),
       );
+      _instance._dio.interceptors.add(CookieManager(cookieJar ?? CookieJar()));
     }
+
     return _instance;
   }
 
@@ -35,15 +40,17 @@ class DioClient {
   /// get
   Future<Response> get({
     required String url,
-    String? token,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? queryParams,
     ResponseType responseType = ResponseType.json,
     bool dynamicUrl = false,
   }) async {
     headers ??= {};
+    SecureStorageClient storageClient = SecureStorageClient.instance;
 
-    if (token != null) headers['Authorization'] = 'Bearer $token';
+    String token = await storageClient.getByKey(SharedPrefKey.accessToken) ?? '';
+
+    headers['Cookie'] = 'token=$token';
 
     try {
       final Response response = await _dio.get(
@@ -72,7 +79,11 @@ class DioClient {
   }) async {
     headers ??= {};
 
-    if (token != null) headers['Authorization'] = 'Bearer $token';
+    SecureStorageClient storageClient = SecureStorageClient.instance;
+
+    String token = await storageClient.getByKey(SharedPrefKey.accessToken) ?? '';
+
+    headers['Cookie'] = 'token=$token';
 
     try {
       final Response response = await _dio.post(
@@ -177,6 +188,42 @@ class DioClient {
       );
 
       return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  //Special case for login with cookie
+  Future<ResponseDataSignIn> signIn({required String url, dynamic data}) async {
+    SecureStorageClient storageClient = SecureStorageClient.instance;
+    try {
+      final Response response = await _dio.post(
+        UrlConstant.baseUrl + url,
+        data: data,
+        options: Options(
+          contentType: 'application/json',
+          responseType: ResponseType.json,
+        ),
+      );
+
+      // Ini Ekstrak cookie dari response
+      final String? cookies = response.headers.map['set-cookie']?.first;
+      if (cookies != null) {
+        // Ini Ekstrak token dari cookie
+        final RegExp regExp = RegExp(r'token=([^;]+)');
+        final match = regExp.firstMatch(cookies);
+        final String? token = match?.group(1);
+
+        if (token != null) {
+          // Mengembalikan token
+          await storageClient.saveKey(SharedPrefKey.accessToken, token);
+          return ResponseDataSignIn(token: token, response: response);
+        } else {
+          throw Exception('Token tidak ditemukan dalam cookie');
+        }
+      } else {
+        throw Exception('Cookie tidak ditemukan dalam response');
+      }
     } catch (e) {
       rethrow;
     }
@@ -292,4 +339,11 @@ class LoggingInterceptor extends Interceptor {
     }
     return false;
   }
+}
+
+class ResponseDataSignIn {
+  final String? token;
+  final Response response;
+
+  ResponseDataSignIn({this.token, required this.response});
 }

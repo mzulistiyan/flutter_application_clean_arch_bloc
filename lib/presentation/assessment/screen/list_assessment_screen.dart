@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import '../../presentation.dart';
 import '../assessment.dart';
 import '../../../common/common.dart';
+import '../../../core/core.dart';
 
 class ListAssessmentScreen extends StatefulWidget {
   const ListAssessmentScreen({super.key});
@@ -24,6 +26,21 @@ class _ListAssessmentScreenState extends State<ListAssessmentScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        actions: [
+          IconButton(
+            onPressed: () {
+              SecureStorageClient storageClient = SecureStorageClient.instance;
+              storageClient.clear();
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SignInScreen(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.logout),
+          ),
+        ],
         title: Text(
           'Halaman Assessment',
           style: FontsGlobal.mediumTextStyle16,

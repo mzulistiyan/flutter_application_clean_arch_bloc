@@ -2,17 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'common/common.dart';
+import 'core/core.dart';
 import 'injection.dart' as di;
 import 'presentation/presentation.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await di.init();
-  runApp(const MyApp());
+  SecureStorageClient storageClient = SecureStorageClient.instance;
+
+  bool isLogin = await storageClient.containsKey(SharedPrefKey.accessToken);
+  runApp(MyApp(
+    isLogin: isLogin,
+  ));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool _isLogin;
+
+  const MyApp({
+    Key? key,
+    bool isLogin = false,
+  })  : _isLogin = isLogin,
+        super(key: key);
 
   // This widget is the root of your application.
   @override
@@ -21,12 +33,10 @@ class MyApp extends StatelessWidget {
 
     return MultiBlocProvider(
       providers: [
-        BlocProvider(
-          create: (context) => di.locator<ListAssessmentBloc>(),
-        ),
-        BlocProvider(
-          create: (context) => di.locator<AssessmentDetailBloc>(),
-        ),
+        BlocProvider(create: (context) => di.locator<ListAssessmentBloc>()),
+        BlocProvider(create: (context) => di.locator<AssessmentDetailBloc>()),
+        BlocProvider(create: (context) => di.locator<SignInBloc>()),
+        BlocProvider(create: (context) => di.locator<AssessmentPostBloc>()),
       ],
       child: MaterialApp(
         title: 'Flutter Demo',
@@ -35,7 +45,7 @@ class MyApp extends StatelessWidget {
           textTheme: GoogleFonts.getTextTheme('Inter'),
           useMaterial3: true,
         ),
-        home: const ListAssessmentScreen(),
+        home: _isLogin ? const ListAssessmentScreen() : const SignInScreen(),
       ),
     );
   }

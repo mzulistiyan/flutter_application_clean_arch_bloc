@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:getwidget/getwidget.dart';
 import '../../presentation.dart';
 import '../../../common/common.dart';
 
@@ -18,6 +19,11 @@ class _AssessmentScreenState extends State<AssessmentScreen> with SingleTickerPr
   late PageController _pageViewController;
   late TabController _tabController;
   int _currentPageIndex = 0;
+  String? _selectedOptionId; // Variabel untuk menyimpan ID opsi yang dipilih
+  List<String> _selectedOptionIds = [];
+
+  String labelButton = 'Next';
+
   @override
   void initState() {
     super.initState();
@@ -28,6 +34,7 @@ class _AssessmentScreenState extends State<AssessmentScreen> with SingleTickerPr
       length: 3,
       vsync: this,
     );
+
     debugPrint('id: ${widget.id}');
     context.read<AssessmentDetailBloc>().add(FecthAssessmentDetail(id: widget.id));
   }
@@ -35,188 +42,168 @@ class _AssessmentScreenState extends State<AssessmentScreen> with SingleTickerPr
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: SafeArea(
-          child: BlocBuilder<AssessmentDetailBloc, AssessmentDetailState>(
-            bloc: context.read<AssessmentDetailBloc>(),
-            builder: (context, state) {
-              if (state is AssessmentDetailLoading) {
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
-              } else if (state is AssessmentDetailHasData) {
-                final data = state.result;
-
-                debugPrint('data: ${data.name}');
-
-                return Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Container(
+      body: SafeArea(
+        child: BlocBuilder<AssessmentDetailBloc, AssessmentDetailState>(
+          bloc: context.read<AssessmentDetailBloc>(),
+          builder: (context, state) {
+            if (state is AssessmentDetailLoading) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            } else if (state is AssessmentDetailHasData) {
+              final data = state.result;
+              return Column(
+                children: [
+                  Text(_selectedOptionIds.toString()),
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: ColorConstant.primaryColor),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            '45 Second Left',
+                            style: FontsGlobal.mediumTextStyle14.copyWith(
+                              color: ColorConstant.primaryColor,
+                            ),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => showCustomDialog(context),
+                          child: Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 16,
                               vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              border: Border.all(color: ColorConstant.primaryColor),
                               borderRadius: BorderRadius.circular(4),
+                              color: ColorConstant.blackColor,
                             ),
-                            child: Text(
-                              '45 Second Left',
-                              style: FontsGlobal.mediumTextStyle14.copyWith(
-                                color: ColorConstant.primaryColor,
-                              ),
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () => showCustomDialog(context),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(4),
-                                color: ColorConstant.blackColor,
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.format_list_bulleted,
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.format_list_bulleted,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                                const HorizontalSeparator(width: 1),
+                                Text(
+                                  '1/${data.question?.length}',
+                                  style: FontsGlobal.mediumTextStyle14.copyWith(
                                     color: Colors.white,
-                                    size: 16,
                                   ),
-                                  const HorizontalSeparator(width: 1),
-                                  Text(
-                                    '1/${state.result.question?.length}',
-                                    style: FontsGlobal.mediumTextStyle14.copyWith(
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    const VerticalSeparator(height: 2),
-                    Expanded(
-                      child: PageView(
-                        controller: _pageViewController,
-                        children: List.generate(
-                          state.result.question?.length ?? 0,
-                          (index) => questionWidget(
-                            question: state.result.question?[index],
-                          ),
+                  ),
+                  const VerticalSeparator(height: 2),
+                  Expanded(
+                    child: PageView(
+                      controller: _pageViewController,
+                      onPageChanged: (index) {
+                        setState(() {
+                          _currentPageIndex = index;
+                          labelButton = index == (data.question?.length ?? 1) - 1 ? 'Submit' : 'Next';
+                        });
+                      },
+                      children: List.generate(
+                        data.question?.length ?? 0,
+                        (index) => questionWidget(
+                          question: data.question?[index],
                         ),
                       ),
                     ),
-                  ],
-                );
-              } else if (state is AssessmentDetailError) {
-                return Center(child: Text(state.message));
-              } else {
-                return const Center(child: Text('Error'));
-              }
-            },
-          ),
+                  ),
+                ],
+              );
+            } else if (state is AssessmentDetailError) {
+              return Center(child: Text(state.message));
+            } else {
+              return const Center(child: Text('Error'));
+            }
+          },
         ),
-        bottomNavigationBar: Container(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: SizeConfig.safeBlockHorizontal * 40,
-                child: SecoundaryButton(
-                  text: 'Back',
-                  onPressed: () {
-                    if (_currentPageIndex > 0) {
-                      _pageViewController.previousPage(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                      );
-                      setState(() {
-                        _currentPageIndex--;
-                      });
-                    }
-                  },
-                ),
+      ),
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            SizedBox(
+              width: SizeConfig.safeBlockHorizontal * 40,
+              child: SecoundaryButton(
+                text: 'Back',
+                onPressed: () {
+                  if (_currentPageIndex > 0) {
+                    _pageViewController.previousPage(duration: const Duration(milliseconds: 300), curve: Curves.easeIn);
+                  }
+                },
               ),
-              const HorizontalSeparator(width: 2),
-              Expanded(
-                child: PrimaryButton(
-                  text: 'Next',
-                  onPressed: () {
-                    if (_currentPageIndex < 2) {
-                      _pageViewController.nextPage(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
+            ),
+            const HorizontalSeparator(width: 2),
+            Expanded(
+              child: BlocConsumer<AssessmentPostBloc, AssessmentPostState>(
+                listener: (context, state) {
+                  debugPrint('state AssessmentPostBloc: $state');
+                },
+                builder: (context, state) {
+                  return PrimaryButton(
+                    text: labelButton, // Gunakan variabel labelButton yang telah diperbarui
+                    onPressed: () {
+                      final bodyReqAssesment = BodyReqAssesment(
+                        assessmentId: widget.id,
+                        answers: [
+                          Answer(
+                            questionId: 'voiev0wjsn',
+                            answer: 'txjjoi4rf5',
+                          ),
+                          Answer(
+                            questionId: 'jjiijmqgfs',
+                            answer: "jp3cvt1dby,yvdlrsh7ax",
+                          ),
+                        ],
                       );
-                      setState(() {
-                        _currentPageIndex++;
-                      });
-                    }
-                  },
-                ),
-              )
-            ],
-          ),
-        )
-        // bottomNavigationBar: Container(
-        //   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        //   decoration: BoxDecoration(
-        //     color: ColorConstant.blackColor,
-        //     boxShadow: [
-        //       BoxShadow(
-        //         color: ColorConstant.blackColor.withOpacity(0.1),
-        //         blurRadius: 10,
-        //         offset: const Offset(0, -2),
-        //       ),
-        //     ],
-        //   ),
-        //   child: Row(
-        //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        //     children: [
-        //       IconButton(
-        //         onPressed: () {
-        //           if (_currentPageIndex > 0) {
-        //             _pageViewController.previousPage(
-        //               duration: const Duration(milliseconds: 300),
-        //               curve: Curves.easeInOut,
-        //             );
-        //             setState(() {
-        //               _currentPageIndex--;
-        //             });
-        //           }
-        //         },
-        //         icon: const Icon(Icons.arrow_back_ios),
-        //       ),
-        //       Text(
-        //         '1/3',
-        //         style: FontsGlobal.mediumTextStyle16,
-        //       ),
-        //       IconButton(
-        //         onPressed: () {
-        //           if (_currentPageIndex < 2) {
-        //             _pageViewController.nextPage(
-        //               duration: const Duration(milliseconds: 300),
-        //               curve: Curves.easeInOut,
-        //             );
-        //             setState(() {
-        //               _currentPageIndex++;
-        //             });
-        //           }
-        //         },
-        //         icon: const Icon(Icons.arrow_forward_ios),
-        //       ),
-        //     ],
-        //   ),
-        // ),
-        );
+
+                      context.read<AssessmentPostBloc>().add(PostAssessmentAnswer(bodyReqAssesment: bodyReqAssesment));
+                      if (_currentPageIndex < 2) {
+                        _pageViewController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeIn);
+                      } else {
+                        final bodyReqAssesment = BodyReqAssesment(
+                          assessmentId: widget.id,
+                          answers: [
+                            Answer(
+                              questionId: 'voiev0wjsn',
+                              answer: 'txjjoi4rf5',
+                            ),
+                            Answer(
+                              questionId: 'jjiijmqgfs',
+                              answer: "jp3cvt1dby,yvdlrsh7ax",
+                            ),
+                          ],
+                        );
+
+                        context.read<AssessmentPostBloc>().add(PostAssessmentAnswer(bodyReqAssesment: bodyReqAssesment));
+                      }
+                    },
+                  );
+                },
+              ),
+            )
+          ],
+        ),
+      ),
+    );
   }
 
   void showCustomDialog(BuildContext context) {
@@ -304,18 +291,21 @@ class _AssessmentScreenState extends State<AssessmentScreen> with SingleTickerPr
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(question?.section ?? '', style: FontsGlobal.mediumTextStyle16),
-                  const VerticalSeparator(height: 0.5),
-                  Text(
-                    question?.questionName ?? '',
-                    style: FontsGlobal.mediumTextStyle14,
-                  ),
-                ],
+            SizedBox(
+              height: SizeConfig.safeBlockVertical * 10,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(question?.section ?? '', style: FontsGlobal.boldTextStyle16),
+                    const VerticalSeparator(height: 0.5),
+                    Text(
+                      question?.questionName ?? '',
+                      style: FontsGlobal.mediumTextStyle14,
+                    ),
+                  ],
+                ),
               ),
             ),
             const VerticalSeparator(height: 2),
@@ -336,20 +326,53 @@ class _AssessmentScreenState extends State<AssessmentScreen> with SingleTickerPr
                   color: ColorConstant.blackColor,
                   thickness: 0.1,
                 ),
-                const VerticalSeparator(height: 2),
               ],
             ),
           ],
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Column(
             children: List.generate(
               question?.options?.length ?? 0,
               (index) => Row(
                 children: [
+                  if (question!.type == 'multiple_choice') ...[
+                    Radio(
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      value: question.options?[index].optionid,
+                      groupValue: _selectedOptionId, // Variabel untuk menyimpan ID opsi yang dipilih
+                      onChanged: (value) {
+                        debugPrint('value: $value');
+                        setState(() {
+                          _selectedOptionId = value as String;
+                        });
+                      },
+                    ),
+                  ] else ...[
+                    GFCheckbox(
+                      size: 20,
+                      type: GFCheckboxType.custom,
+                      inactiveBorderColor: Colors.grey,
+                      activeBorderColor: ColorConstant.primaryColor,
+                      activeBgColor: ColorConstant.primaryColor,
+                      customBgColor: ColorConstant.primaryColor,
+                      inactiveBgColor: Colors.white,
+                      onChanged: (bool? value) {
+                        setState(() {
+                          if (value == true) {
+                            _selectedOptionIds.add(question.options?[index].optionid ?? '');
+                          } else {
+                            _selectedOptionIds.remove(question.options?[index].optionid);
+                          }
+                        });
+                      },
+                      value: _selectedOptionIds.contains(question.options?[index].optionid),
+                      inactiveIcon: null,
+                    ),
+                  ],
                   Text(
-                    question?.options?[index].optionName ?? '',
+                    question.options?[index].optionName ?? '',
                     style: FontsGlobal.mediumTextStyle16,
                   ),
                 ],
@@ -358,6 +381,31 @@ class _AssessmentScreenState extends State<AssessmentScreen> with SingleTickerPr
           ),
         )
       ],
+    );
+  }
+
+  Widget customCheckbox({bool? value, Function(bool?)? onChanged}) {
+    return InkWell(
+      onTap: () => onChanged?.call(!value!),
+      child: Container(
+        decoration: BoxDecoration(
+          color: value == true ? Colors.blue : Colors.transparent, // Warna latar biru jika terpilih
+          border: Border.all(
+            color: value == true ? Colors.blue : Colors.grey, // Border biru jika terpilih, abu-abu jika tidak
+            width: 2, // Lebar border
+          ),
+          shape: BoxShape.rectangle, // Bentuk kotak
+        ),
+        width: 24, // Lebar kotak (sesuaikan sesuai kebutuhan)
+        height: 24, // Tinggi kotak (sesuaikan sesuai kebutuhan)
+        child: value == true
+            ? const Icon(
+                Icons.check, // Icon centang
+                size: 24, // Ukuran icon
+                color: Colors.white, // Warna icon
+              )
+            : null, // Jika tidak terpilih, tidak menampilkan apa-apa
+      ),
     );
   }
 }
