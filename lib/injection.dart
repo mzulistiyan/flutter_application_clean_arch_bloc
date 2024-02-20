@@ -1,6 +1,7 @@
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:get/get.dart';
 import 'package:get_it/get_it.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:logger/logger.dart';
 import '../../../core/core.dart';
 import 'presentation/presentation.dart';
@@ -11,6 +12,19 @@ Future<void> init() async {
   // SSL pinning
   var logger = Logger();
   Get.put<Logger>(logger); // Memasukkan logger ke dalam container Get
+
+  //init hive
+  await Hive.initFlutter();
+  // Hive.registerAdapter(CatModelAdapter());
+  //register adapter
+  Hive.registerAdapter(AssessmentHiveModelAdapter());
+  Hive.openBox<AssessmentHiveModel>('assessments');
+  Hive.registerAdapter(QuestionHiveModelAdapter());
+  Hive.openBox<QuestionHiveModel>('questions');
+  Hive.registerAdapter(OptionHiveModelAdapter());
+  Hive.openBox<OptionHiveModel>('options');
+  Hive.registerAdapter(AssessmentDetailResponseHiveAdapter());
+  Hive.openBox<AssessmentDetailResponseHive>('assessmentDetail');
 
   //CookieJar
   var cookieJar = CookieJar();
@@ -32,6 +46,9 @@ Future<void> init() async {
     secureStorageClient: secureStorageClient,
   ));
 
+  //assessment data source local
+  Get.put<AssessmentLocalDataSource>(AssessmentLocalDataSourceImpl());
+
   //auth data source
   Get.put<AuthRemoteDataSource>(AuthRemoteDataSourceImpl(
     dioClient: Get.find(),
@@ -41,6 +58,7 @@ Future<void> init() async {
   // Assessment repository
   Get.put<AssessmentRepository>(AssessmentRepositoryImpl(
     remoteDataSource: Get.find(),
+    localDataSource: Get.find(),
   ));
 
   // auth repository
@@ -52,6 +70,10 @@ Future<void> init() async {
   Get.put(GetListAssessment(Get.find()));
   Get.put(GetAssessmentDetail(Get.find()));
   Get.put(PostAssessment(Get.find()));
+  Get.put(SaveAssessment(Get.find()));
+  Get.put(GetAssessmentCached(Get.find()));
+  Get.put(SaveAssessmentDetail(Get.find()));
+  Get.put(GetAssessmentDetailCached(Get.find()));
 
   // auth usecases
   Get.put(SignIn(Get.find()));
@@ -61,17 +83,25 @@ Future<void> init() async {
   locator.registerLazySingleton(() => AssessmentDetailBloc(locator()));
   locator.registerLazySingleton(() => SignInBloc(locator()));
   locator.registerLazySingleton(() => AssessmentPostBloc(locator()));
+  locator.registerLazySingleton(() => InsertAssessmentLocalBloc(locator()));
+  locator.registerLazySingleton(() => AssessmentDetailHiveBlocBloc(locator()));
+  locator.registerLazySingleton(() => InsertDetailAssessmentLocalBloc(locator()));
 
   // use case
   locator.registerLazySingleton(() => GetListAssessment(locator()));
   locator.registerLazySingleton(() => GetAssessmentDetail(locator()));
   locator.registerLazySingleton(() => SignIn(locator()));
   locator.registerLazySingleton(() => PostAssessment(locator()));
+  locator.registerLazySingleton(() => SaveAssessment(locator()));
+  locator.registerLazySingleton(() => GetAssessmentCached(locator()));
+  locator.registerLazySingleton(() => SaveAssessmentDetail(locator()));
+  locator.registerLazySingleton(() => GetAssessmentDetailCached(locator()));
 
   // repository
   locator.registerLazySingleton<AssessmentRepository>(
     () => AssessmentRepositoryImpl(
       remoteDataSource: locator(),
+      localDataSource: locator(),
     ),
   );
 
@@ -87,6 +117,11 @@ Future<void> init() async {
       dioClient: Get.find(),
       secureStorageClient: secureStorageClient,
     ),
+  );
+
+  //assessment data source local
+  locator.registerLazySingleton<AssessmentLocalDataSource>(
+    () => AssessmentLocalDataSourceImpl(),
   );
 
   locator.registerLazySingleton<AuthRemoteDataSource>(

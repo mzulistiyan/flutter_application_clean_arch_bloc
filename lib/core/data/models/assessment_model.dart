@@ -17,6 +17,7 @@ class AssessmentModel extends Equatable {
   String? description;
   String? type;
   DateTime? createdAt;
+  DateTime? downloadedAt;
 
   AssessmentModel({
     this.id,
@@ -25,6 +26,7 @@ class AssessmentModel extends Equatable {
     this.description,
     this.type,
     this.createdAt,
+    this.downloadedAt,
   });
 
   factory AssessmentModel.fromJson(Map<String, dynamic> json) => AssessmentModel(
@@ -34,6 +36,7 @@ class AssessmentModel extends Equatable {
         description: json["description"],
         type: json["type"],
         createdAt: json["created_at"] == null ? null : DateTime.parse(json["created_at"]),
+        downloadedAt: json["downloaded_at"] == null ? null : DateTime.parse(json["downloaded_at"]),
       );
 
   Assessment toEntity() {
@@ -44,6 +47,7 @@ class AssessmentModel extends Equatable {
       description: description,
       type: type,
       createdAt: createdAt,
+      downloadedAt: downloadedAt,
     );
   }
 
@@ -54,8 +58,9 @@ class AssessmentModel extends Equatable {
         "description": description,
         "type": type,
         "created_at": createdAt?.toIso8601String(),
+        "downloaded_at": downloadedAt?.toIso8601String(),
       };
 
   @override
-  List<Object?> get props => [id, name, assessmentDate, description, type];
+  List<Object?> get props => [id, name, assessmentDate, description, type, createdAt, downloadedAt];
 }

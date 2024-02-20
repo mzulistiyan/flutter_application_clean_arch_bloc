@@ -3,3 +3,8 @@ export 'assessment_response.dart';
 export 'assessment_question_model.dart';
 export 'assessment_option_model.dart';
 export 'assessment_detail_model.dart';
+export 'cat_model.dart';
+export 'assessment_hive_model.dart';
+export 'assessment_question_hive_model.dart';
+export 'assessment_option_hive_model.dart';
+export 'assessment_detail_hive_model.dart';

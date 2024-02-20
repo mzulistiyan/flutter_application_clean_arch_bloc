@@ -54,7 +54,6 @@ class _AssessmentScreenState extends State<AssessmentScreen> with SingleTickerPr
               final data = state.result;
               return Column(
                 children: [
-                  Text(_selectedOptionIds.toString()),
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: Row(

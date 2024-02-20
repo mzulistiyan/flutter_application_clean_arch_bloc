@@ -7,16 +7,18 @@ class Assessment extends Equatable {
   final String? description;
   final String? type;
   final DateTime? createdAt;
+  DateTime? downloadedAt;
 
-  const Assessment({
+  Assessment({
     this.id,
     this.name,
     this.assessmentDate,
     this.description,
     this.type,
     this.createdAt,
+    this.downloadedAt,
   });
 
   @override
-  List<Object?> get props => [id, name, assessmentDate, description, type, createdAt];
+  List<Object?> get props => [id, name, assessmentDate, description, type, createdAt, downloadedAt];
 }

@@ -37,6 +37,9 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (context) => di.locator<AssessmentDetailBloc>()),
         BlocProvider(create: (context) => di.locator<SignInBloc>()),
         BlocProvider(create: (context) => di.locator<AssessmentPostBloc>()),
+        BlocProvider(create: (context) => di.locator<InsertAssessmentLocalBloc>()),
+        BlocProvider(create: (context) => di.locator<AssessmentDetailHiveBlocBloc>()),
+        BlocProvider(create: (context) => di.locator<InsertDetailAssessmentLocalBloc>()),
       ],
       child: MaterialApp(
         title: 'Flutter Demo',
