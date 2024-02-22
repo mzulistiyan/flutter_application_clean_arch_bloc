@@ -3,9 +3,7 @@
 A new Flutter project.
 
 APK : https://drive.google.com/file/d/1OdeYYPLeT9IVkd-pJDYViMKyGJJuzT_2/view?usp=sharing
-
-![Uploading Flow Flutter Clean Arch Synapsis.drawio.png…]()
-
+Vidio Demo App : https://drive.google.com/file/d/1QIP5EzDwgidMv34QM2BUEgJa_G-f4aKd/view?usp=sharing
 
 ## Getting Started
 
