@@ -1,8 +1,11 @@
-# flutter_application_clean_arch
+![Flow Flutter Clean Arch Synapsis drawio](https://github.com/mzulistiyan/flutter_application_clean_arch_bloc/assets/73477574/991860e0-6ea8-4415-9fcc-62d545f0b071)# flutter_application_clean_arch
 
 A new Flutter project.
 
 APK : https://drive.google.com/file/d/1OdeYYPLeT9IVkd-pJDYViMKyGJJuzT_2/view?usp=sharing
+
+![Uploading Flow Flutter Clean Arch Synapsis.drawio.png…]()
+
 
 ## Getting Started
 
