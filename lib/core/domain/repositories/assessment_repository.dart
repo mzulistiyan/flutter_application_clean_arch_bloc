@@ -3,7 +3,7 @@ import '../../../common/common.dart';
 import '../../core.dart';
 
 abstract class AssessmentRepository {
-  Future<Either<Failure, List<Assessment>>> getAssesment();
+  Future<Either<Failure, List<Assessment>>> getAssesment(int page);
   Future<Either<Failure, AssessmentDetail>> getAssessmentDetail(String id);
   Future<Either<Failure, String>> postAssessment({
     required BodyReqAssesment bodyReqAssesment,
@@ -12,4 +12,5 @@ abstract class AssessmentRepository {
   Future<Either<Failure, List<AssessmentHiveModel>>> getAssessmentCached();
   Future<Either<Failure, AssessmentDetailResponseHive>> getAssessmentDetailCached(String id);
   Future<Either<Failure, String>> insertAssessmentDail(AssessmentDetailResponseHive assessmentDetail);
+  Future<Either<Failure, String>> insertAnswerAssessmentToLocal(BodyReqHiveAssesment bodyReq);
 }

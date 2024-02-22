@@ -12,12 +12,12 @@ class AssessmentRepositoryImpl implements AssessmentRepository {
   });
 
   @override
-  Future<Either<Failure, List<Assessment>>> getAssesment() async {
+  Future<Either<Failure, List<Assessment>>> getAssesment(int page) async {
     try {
       // final result = await remoteDataSource.getAssessment();
       // return Right(result.map((model) => model.toEntity()).toList());
 
-      final result = await remoteDataSource.getAssessment();
+      final result = await remoteDataSource.getAssessment(page);
       final cachedAssessments = await localDataSource.getAssessmentCached(); // Ambil semua data cached
 
       final assessments = result.map((model) {
@@ -71,16 +71,27 @@ class AssessmentRepositoryImpl implements AssessmentRepository {
   }
 
   @override
-  Future<Either<Failure, String>> postAssessment({
-    required BodyReqAssesment bodyReqAssesment,
-  }) async {
+  Future<Either<Failure, String>> postAssessment({required BodyReqAssesment bodyReqAssesment}) async {
     try {
-      final result = await remoteDataSource.postAssessment(
-        bodyReqAssesment: bodyReqAssesment,
+      final result = await remoteDataSource.postAssessment(bodyReqAssesment: bodyReqAssesment);
+      return Right('Berhasil, Tapi Status Code: $result');
+    } catch (e) {
+      // Konversi List<Answer> menjadi List<AnswerHive>
+      List<AnswerHive>? answersHive = bodyReqAssesment.answers
+          ?.map((answer) => AnswerHive(
+                questionId: answer.questionId,
+                answer: answer.answer,
+              ))
+          .toList();
+      BodyReqHiveAssesment(
+        assessmentId: bodyReqAssesment.assessmentId,
+        answers: answersHive,
       );
-      return Right(result);
-    } on ServerException {
-      return Left(ServerFailure(''));
+      await localDataSource.insertAnswerAssessmentToLocal(BodyReqHiveAssesment(
+        assessmentId: bodyReqAssesment.assessmentId,
+        answers: answersHive,
+      ));
+      return const Right('Gagal, Tapi Berhasil menyimpan ke local');
     }
   }
 
@@ -118,6 +129,16 @@ class AssessmentRepositoryImpl implements AssessmentRepository {
   Future<Either<Failure, String>> insertAssessmentDail(AssessmentDetailResponseHive assessmentDetail) async {
     try {
       final result = await localDataSource.insertAssessmentDail(assessmentDetail);
+      return Right(result);
+    } on ServerException {
+      return Left(ServerFailure(''));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> insertAnswerAssessmentToLocal(BodyReqHiveAssesment bodyReq) async {
+    try {
+      final result = await localDataSource.insertAnswerAssessmentToLocal(bodyReq);
       return Right(result);
     } on ServerException {
       return Left(ServerFailure(''));

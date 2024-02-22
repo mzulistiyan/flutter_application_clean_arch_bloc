@@ -27,56 +27,6 @@ class _SignInScreenState extends State<SignInScreen> {
 
   bool isChecked = false;
 
-  Future<void> _authenticateWithBiometrics() async {
-    bool authenticated = false;
-    try {
-      setState(() {
-        _isAuthenticating = true;
-        _authorized = 'Authenticating';
-        debugPrint('Masuk Sini 1');
-      });
-      authenticated = await auth.authenticate(
-        localizedReason: 'Scan Finger Print yang terdaftar di perangkat anda',
-        authMessages: const [
-          AndroidAuthMessages(
-            signInTitle: 'Masuk dengan Sidik Jari',
-            cancelButton: 'Batal',
-          ),
-        ],
-        options: const AuthenticationOptions(
-          stickyAuth: true,
-          biometricOnly: true,
-        ),
-      );
-      setState(() {
-        _isAuthenticating = false;
-        _authorized = 'Authenticating';
-        debugPrint('Success Auth');
-        context.read<SignInBloc>().add(
-              const SignInWithNIKAndPassword(
-                nik: 'SYN10',
-                password: 'SYN10',
-              ),
-            );
-      });
-    } on PlatformException catch (e) {
-      print(e);
-      setState(() {
-        _isAuthenticating = false;
-        _authorized = 'Error - ${e.message}';
-      });
-      return;
-    }
-    if (!mounted) {
-      return;
-    }
-
-    final String message = authenticated ? 'Authorized' : 'Not Authorized';
-    setState(() {
-      _authorized = message;
-    });
-  }
-
   @override
   void initState() {
     super.initState();
@@ -152,7 +102,20 @@ class _SignInScreenState extends State<SignInScreen> {
               BlocConsumer<SignInBloc, SignInState>(
                 listener: (context, state) {
                   debugPrint('state SignInBloc : $state');
-                  if (state is SignInSuccess) {
+                  if (state is SignInLoading) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          "loading....",
+                          style: FontsGlobal.mediumTextStyle14,
+                        ),
+                        behavior: SnackBarBehavior.floating,
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  } else if (state is SignInSuccess) {
+                    //close loading
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
                     saveNIKPassword();
                     Navigator.pushAndRemoveUntil(
                       context,
@@ -212,12 +175,59 @@ class _SignInScreenState extends State<SignInScreen> {
   void getDataRememberMe() {
     sharedPrefClient.getByKey(key: SharedPrefKey.authEmail).then((value) {
       emailTextController.text = value ?? '';
-      setState(() {
-        isChecked = true;
-      });
     });
     sharedPrefClient.getByKey(key: SharedPrefKey.authPassword).then((value) {
       passwordTextController.text = value ?? '';
+    });
+  }
+
+  Future<void> _authenticateWithBiometrics() async {
+    bool authenticated = false;
+    try {
+      setState(() {
+        _isAuthenticating = true;
+        _authorized = 'Authenticating';
+        debugPrint('Masuk Sini 1');
+      });
+      authenticated = await auth.authenticate(
+        localizedReason: 'Scan Finger Print yang terdaftar di perangkat anda',
+        authMessages: const [
+          AndroidAuthMessages(
+            signInTitle: 'Masuk dengan Sidik Jari',
+            cancelButton: 'Batal',
+          ),
+        ],
+        options: const AuthenticationOptions(
+          stickyAuth: true,
+          biometricOnly: true,
+        ),
+      );
+      setState(() {
+        _isAuthenticating = false;
+        _authorized = 'Authenticating';
+        debugPrint('Success Auth');
+        context.read<SignInBloc>().add(
+              const SignInWithNIKAndPassword(
+                nik: 'SYN10',
+                password: 'SYN10',
+              ),
+            );
+      });
+    } on PlatformException catch (e) {
+      print(e);
+      setState(() {
+        _isAuthenticating = false;
+        _authorized = 'Error - ${e.message}';
+      });
+      return;
+    }
+    if (!mounted) {
+      return;
+    }
+
+    final String message = authenticated ? 'Authorized' : 'Not Authorized';
+    setState(() {
+      _authorized = message;
     });
   }
 }

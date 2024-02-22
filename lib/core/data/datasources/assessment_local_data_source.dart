@@ -8,6 +8,7 @@ abstract class AssessmentLocalDataSource {
   Future<List<AssessmentHiveModel>> getAssessmentCached();
   Future<AssessmentDetailResponseHive> getAssessmentDetailCached(String id);
   Future<String> insertAssessmentDail(AssessmentDetailResponseHive assessmentDetail);
+  Future<String> insertAnswerAssessmentToLocal(BodyReqHiveAssesment bodyReq);
 }
 
 class AssessmentLocalDataSourceImpl implements AssessmentLocalDataSource {
@@ -68,5 +69,14 @@ class AssessmentLocalDataSourceImpl implements AssessmentLocalDataSource {
       await assessmentBox.put(assessmentDetail.id, assessmentDetail);
       return 'Success';
     }
+  }
+
+  @override
+  Future<String> insertAnswerAssessmentToLocal(BodyReqHiveAssesment bodyReq) async {
+    //open box
+    Box<BodyReqHiveAssesment> assessmentBox = Hive.box<BodyReqHiveAssesment>('AnswerAssessmentLocal');
+    //put New data to box
+    await assessmentBox.add(bodyReq);
+    return 'Success';
   }
 }

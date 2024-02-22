@@ -7,4 +7,16 @@ abstract class ListAssessmentEvent extends Equatable {
   List<Object> get props => [];
 }
 
-class ListAssessmentLoad extends ListAssessmentEvent {}
+class ListAssessmentLoad extends ListAssessmentEvent {
+  const ListAssessmentLoad();
+}
+
+class CheckIfNeedMoreDataEvent extends ListAssessmentEvent {
+  final int index;
+  const CheckIfNeedMoreDataEvent({required this.index});
+
+  @override
+  List<Object> get props => [index];
+}
+
+class ListAssessmentRefresh extends ListAssessmentEvent {}

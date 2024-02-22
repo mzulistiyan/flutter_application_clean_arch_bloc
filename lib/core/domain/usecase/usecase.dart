@@ -6,3 +6,4 @@ export 'insert_assessment_hive.dart';
 export 'get_assessment_cached.dart';
 export 'get_assessment_detail_cache.dart';
 export 'insert_assessment_detail_hive.dart';
+export 'insert_answer_to_local.dart';

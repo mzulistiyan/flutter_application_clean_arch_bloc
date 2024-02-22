@@ -8,7 +8,7 @@ class GetListAssessment {
 
   GetListAssessment(this.repository);
 
-  Future<Either<Failure, List<Assessment>>> execute() {
-    return repository.getAssesment();
+  Future<Either<Failure, List<Assessment>>> execute(int page) {
+    return repository.getAssesment(page);
   }
 }

@@ -1,13 +1,66 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:workmanager/workmanager.dart';
 import 'common/common.dart';
 import 'core/core.dart';
 import 'injection.dart' as di;
 import 'presentation/presentation.dart';
 
+BodyReqAssesment convertToServerModel(BodyReqHiveAssesment hiveModel) {
+  List<Answer>? answers = hiveModel.answers
+      ?.map((answerHive) => Answer(
+            questionId: answerHive.questionId,
+            answer: answerHive.answer,
+          ))
+      .toList();
+
+  return BodyReqAssesment(
+    assessmentId: hiveModel.assessmentId,
+    answers: answers,
+  );
+}
+
+@pragma('vm:entry-point') // Mandatory if the App is obfuscated or using Flutter 3.1+
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) async {
+    switch (task) {
+      case 'simpleTask':
+        await di.init();
+        final AssessmentPostBloc assesmentBloc = di.locator<AssessmentPostBloc>();
+
+        //open box
+        Box<BodyReqHiveAssesment> assessmentBox = await Hive.openBox<BodyReqHiveAssesment>('AnswerAssessmentLocal');
+
+        //get all data from box as list
+        List<BodyReqHiveAssesment> bodyReq = assessmentBox.values.toList();
+
+        debugPrint('Data From Work Manager: ${bodyReq[0].assessmentId ?? ''}');
+        // Konversi List<AnswerHive> menjadi List<Answer>
+        if (bodyReq.isNotEmpty) {
+          for (var i = 0; i < bodyReq.length; i++) {
+            BodyReqAssesment bodyReqAssesment = convertToServerModel(bodyReq[i]);
+            assesmentBloc.add(
+              PostAssessmentAnswer(
+                bodyReqAssesment: bodyReqAssesment,
+              ),
+            );
+            bodyReq.removeAt(i);
+          }
+        }
+        break;
+      default:
+    }
+
+    return Future.value(true);
+  });
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await di.init();
   SecureStorageClient storageClient = SecureStorageClient.instance;
 

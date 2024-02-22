@@ -21,10 +21,4 @@ class ListAssessmentError extends ListAssessmentState {
   List<Object> get props => [message];
 }
 
-class ListAssessmentHasData extends ListAssessmentState {
-  final List<Assessment> result;
-  const ListAssessmentHasData(this.result);
-
-  @override
-  List<Object> get props => [result];
-}
+class ListAssessmentHasData extends ListAssessmentState {}

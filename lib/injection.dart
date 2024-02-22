@@ -3,7 +3,9 @@ import 'package:get/get.dart';
 import 'package:get_it/get_it.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:logger/logger.dart';
+import 'package:workmanager/workmanager.dart';
 import '../../../core/core.dart';
+import 'main.dart';
 import 'presentation/presentation.dart';
 
 final locator = GetIt.instance;
@@ -25,6 +27,10 @@ Future<void> init() async {
   Hive.openBox<OptionHiveModel>('options');
   Hive.registerAdapter(AssessmentDetailResponseHiveAdapter());
   Hive.openBox<AssessmentDetailResponseHive>('assessmentDetail');
+  Hive.registerAdapter(BodyReqHiveAssesmentAdapter());
+  Hive.openBox<BodyReqHiveAssesment>('AnswerAssessmentLocal');
+  Hive.registerAdapter(AnswerHiveAdapter());
+  Hive.openBox<AnswerHive>('answersModelLocal');
 
   //CookieJar
   var cookieJar = CookieJar();
@@ -74,6 +80,7 @@ Future<void> init() async {
   Get.put(GetAssessmentCached(Get.find()));
   Get.put(SaveAssessmentDetail(Get.find()));
   Get.put(GetAssessmentDetailCached(Get.find()));
+  Get.put(InsertAnswerToLocal(Get.find()));
 
   // auth usecases
   Get.put(SignIn(Get.find()));
@@ -96,6 +103,7 @@ Future<void> init() async {
   locator.registerLazySingleton(() => GetAssessmentCached(locator()));
   locator.registerLazySingleton(() => SaveAssessmentDetail(locator()));
   locator.registerLazySingleton(() => GetAssessmentDetailCached(locator()));
+  locator.registerLazySingleton(() => InsertAnswerToLocal(locator()));
 
   // repository
   locator.registerLazySingleton<AssessmentRepository>(
@@ -138,5 +146,16 @@ Future<void> init() async {
   // external
   locator.registerLazySingleton(() => ioClient);
 
-  //init size config
+  //init WorkManager
+  await Workmanager().initialize(
+    callbackDispatcher, // The top level function, aka callbackDispatcher
+    isInDebugMode: true,
+  );
+  Workmanager().registerOneOffTask(
+    "task-identifier",
+    "simpleTask",
+    constraints: Constraints(
+      networkType: NetworkType.connected,
+    ),
+  );
 }

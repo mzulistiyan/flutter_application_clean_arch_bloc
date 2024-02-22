@@ -2,7 +2,7 @@ import '../../../common/common.dart';
 import '../../core.dart';
 
 abstract class AssessmentRemoteDataSource {
-  Future<List<AssessmentModel>> getAssessment();
+  Future<List<AssessmentModel>> getAssessment(int page);
   Future<AssessmentDetailResponse> getAssessmentDetail(String id);
   Future<String> postAssessment({required BodyReqAssesment bodyReqAssesment});
 }
@@ -14,11 +14,11 @@ class AssessmentRemoteDataSourceImpl implements AssessmentRemoteDataSource {
   AssessmentRemoteDataSourceImpl({required this.dioClient, required this.secureStorageClient});
 
   @override
-  Future<List<AssessmentModel>> getAssessment() async {
+  Future<List<AssessmentModel>> getAssessment(int page) async {
     final response = await dioClient.get(
       url: UrlConstant.assessment,
       queryParams: {
-        'page': 1,
+        'page': page,
         'limit': 10,
       },
     );

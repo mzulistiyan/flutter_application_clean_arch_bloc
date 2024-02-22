@@ -16,11 +16,19 @@ class AssessmentScreen extends StatefulWidget {
 }
 
 class _AssessmentScreenState extends State<AssessmentScreen> with SingleTickerProviderStateMixin {
+  //Pageview
   late PageController _pageViewController;
   late TabController _tabController;
   int _currentPageIndex = 0;
+  int lengthPage = 0;
+
+  //Answer
   String? _selectedOptionId; // Variabel untuk menyimpan ID opsi yang dipilih
-  List<String> _selectedOptionIds = [];
+  List<String> selectedOptionIds = [];
+  List<Answer>? answerList = [];
+  Map<String, String> selectedOptionIdByQuestion = {}; // Untuk menyimpan opsi radio yang dipilih berdasarkan questionId
+  Map<String, List<String>> selectedOptionsForCheckboxes = {}; // Untuk menyimpan opsi checkbox yang dipilih
+  final List<int> selectedNumbers = []; // Angka yang dipilih untuk warna yang berbeda
 
   String labelButton = 'Next';
 
@@ -52,6 +60,7 @@ class _AssessmentScreenState extends State<AssessmentScreen> with SingleTickerPr
               );
             } else if (state is AssessmentDetailHasData) {
               final data = state.result;
+              lengthPage = data.question?.length ?? 0;
               return Column(
                 children: [
                   Padding(
@@ -95,7 +104,7 @@ class _AssessmentScreenState extends State<AssessmentScreen> with SingleTickerPr
                                 ),
                                 const HorizontalSeparator(width: 1),
                                 Text(
-                                  '1/${data.question?.length}',
+                                  '${_currentPageIndex + 1}/${data.question?.length}',
                                   style: FontsGlobal.mediumTextStyle14.copyWith(
                                     color: Colors.white,
                                   ),
@@ -155,44 +164,48 @@ class _AssessmentScreenState extends State<AssessmentScreen> with SingleTickerPr
               child: BlocConsumer<AssessmentPostBloc, AssessmentPostState>(
                 listener: (context, state) {
                   debugPrint('state AssessmentPostBloc: $state');
+                  if (state is AssessmentPostSuccess) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          state.message,
+                          style: FontsGlobal.mediumTextStyle14,
+                        ),
+                        behavior: SnackBarBehavior.floating,
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                    Navigator.pop(context);
+                  }
                 },
                 builder: (context, state) {
                   return PrimaryButton(
                     text: labelButton, // Gunakan variabel labelButton yang telah diperbarui
                     onPressed: () {
-                      final bodyReqAssesment = BodyReqAssesment(
-                        assessmentId: widget.id,
-                        answers: [
-                          Answer(
-                            questionId: 'voiev0wjsn',
-                            answer: 'txjjoi4rf5',
-                          ),
-                          Answer(
-                            questionId: 'jjiijmqgfs',
-                            answer: "jp3cvt1dby,yvdlrsh7ax",
-                          ),
-                        ],
-                      );
-
-                      context.read<AssessmentPostBloc>().add(PostAssessmentAnswer(bodyReqAssesment: bodyReqAssesment));
-                      if (_currentPageIndex < 2) {
-                        _pageViewController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeIn);
+                      //next page
+                      if (_currentPageIndex + 1 == lengthPage) {
+                        //check answer list is empty
+                        if (answerList?.isEmpty ?? true) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Silahkan Isi Minimal 1 Jawaban',
+                                style: FontsGlobal.mediumTextStyle14,
+                              ),
+                              behavior: SnackBarBehavior.floating,
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        } else {
+                          //submit answer
+                          final bodyReqAssesment = BodyReqAssesment(
+                            assessmentId: widget.id,
+                            answers: answerList,
+                          );
+                          context.read<AssessmentPostBloc>().add(PostAssessmentAnswer(bodyReqAssesment: bodyReqAssesment));
+                        }
                       } else {
-                        final bodyReqAssesment = BodyReqAssesment(
-                          assessmentId: widget.id,
-                          answers: [
-                            Answer(
-                              questionId: 'voiev0wjsn',
-                              answer: 'txjjoi4rf5',
-                            ),
-                            Answer(
-                              questionId: 'jjiijmqgfs',
-                              answer: "jp3cvt1dby,yvdlrsh7ax",
-                            ),
-                          ],
-                        );
-
-                        context.read<AssessmentPostBloc>().add(PostAssessmentAnswer(bodyReqAssesment: bodyReqAssesment));
+                        _pageViewController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeIn);
                       }
                     },
                   );
@@ -206,8 +219,6 @@ class _AssessmentScreenState extends State<AssessmentScreen> with SingleTickerPr
   }
 
   void showCustomDialog(BuildContext context) {
-    final List<int> selectedNumbers = [1, 2, 3]; // Angka yang dipilih untuk warna yang berbeda
-
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
@@ -244,7 +255,7 @@ class _AssessmentScreenState extends State<AssessmentScreen> with SingleTickerPr
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 5, // Jumlah item dalam satu baris
                     ),
-                    itemCount: 10, // Jumlah total item
+                    itemCount: lengthPage,
                     itemBuilder: (BuildContext context, int index) {
                       bool isSelected = selectedNumbers.contains(index + 1);
                       return GestureDetector(
@@ -345,6 +356,8 @@ class _AssessmentScreenState extends State<AssessmentScreen> with SingleTickerPr
                         debugPrint('value: $value');
                         setState(() {
                           _selectedOptionId = value as String;
+                          _updateAnswerListForRadio(question.questionid ?? '', value);
+                          selectedNumbers.add(_currentPageIndex + 1);
                         });
                       },
                     ),
@@ -360,13 +373,15 @@ class _AssessmentScreenState extends State<AssessmentScreen> with SingleTickerPr
                       onChanged: (bool? value) {
                         setState(() {
                           if (value == true) {
-                            _selectedOptionIds.add(question.options?[index].optionid ?? '');
+                            selectedOptionIds.add(question.options?[index].optionid ?? '');
                           } else {
-                            _selectedOptionIds.remove(question.options?[index].optionid);
+                            selectedOptionIds.remove(question.options?[index].optionid);
                           }
+                          _updateAnswerListForCheckbox(question.questionid ?? '', question.options?[index].optionid ?? '', value!);
+                          selectedNumbers.add(_currentPageIndex + 1);
                         });
                       },
-                      value: _selectedOptionIds.contains(question.options?[index].optionid),
+                      value: selectedOptionIds.contains(question.options?[index].optionid),
                       inactiveIcon: null,
                     ),
                   ],
@@ -406,5 +421,29 @@ class _AssessmentScreenState extends State<AssessmentScreen> with SingleTickerPr
             : null, // Jika tidak terpilih, tidak menampilkan apa-apa
       ),
     );
+  }
+
+  void _updateAnswerListForRadio(String questionId, String optionId) {
+    selectedOptionIdByQuestion[questionId] = optionId; // Simpan atau perbarui opsi yang dipilih
+    // Filter answerList untuk menghapus jawaban sebelumnya untuk questionId ini
+    answerList?.removeWhere((answer) => answer.questionId == questionId);
+    // Tambahkan jawaban baru
+    answerList?.add(Answer(questionId: questionId, answer: optionId));
+  }
+
+  void _updateAnswerListForCheckbox(String questionId, String optionId, bool isSelected) {
+    final selectedOptions = selectedOptionsForCheckboxes.putIfAbsent(questionId, () => []);
+    if (isSelected) {
+      selectedOptions.add(optionId);
+    } else {
+      selectedOptions.remove(optionId);
+    }
+    selectedOptionsForCheckboxes[questionId] = selectedOptions;
+    // Filter answerList untuk menghapus jawaban sebelumnya untuk questionId ini
+    answerList?.removeWhere((answer) => answer.questionId == questionId);
+    // Tambahkan jawaban baru dengan optionId yang dipilih
+    if (selectedOptions.isNotEmpty) {
+      answerList?.add(Answer(questionId: questionId, answer: selectedOptions.join(',')));
+    }
   }
 }
