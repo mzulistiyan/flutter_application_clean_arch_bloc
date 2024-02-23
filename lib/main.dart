@@ -9,20 +9,6 @@ import 'core/core.dart';
 import 'injection.dart' as di;
 import 'presentation/presentation.dart';
 
-BodyReqAssesment convertToServerModel(BodyReqHiveAssesment hiveModel) {
-  List<Answer>? answers = hiveModel.answers
-      ?.map((answerHive) => Answer(
-            questionId: answerHive.questionId,
-            answer: answerHive.answer,
-          ))
-      .toList();
-
-  return BodyReqAssesment(
-    assessmentId: hiveModel.assessmentId,
-    answers: answers,
-  );
-}
-
 @pragma('vm:entry-point') // Mandatory if the App is obfuscated or using Flutter 3.1+
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
@@ -105,4 +91,18 @@ class MyApp extends StatelessWidget {
       ),
     );
   }
+}
+
+BodyReqAssesment convertToServerModel(BodyReqHiveAssesment hiveModel) {
+  List<Answer>? answers = hiveModel.answers
+      ?.map((answerHive) => Answer(
+            questionId: answerHive.questionId,
+            answer: answerHive.answer,
+          ))
+      .toList();
+
+  return BodyReqAssesment(
+    assessmentId: hiveModel.assessmentId,
+    answers: answers,
+  );
 }

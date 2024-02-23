@@ -37,13 +37,13 @@ class ListAssessmentBloc extends Bloc<ListAssessmentEvent, ListAssessmentState> 
     );
     on<CheckIfNeedMoreDataEvent>((event, emit) async {
       if (event.index == assessments.length - nextPageTrigger && !isLastPage) {
-        add(const ListAssessmentLoad());
+        add(ListAssessmentLoad());
       }
     });
     on<ListAssessmentRefresh>((event, emit) async {
       pageNumber = 1;
       assessments = [];
-      add(const ListAssessmentLoad());
+      add(ListAssessmentLoad());
     });
   }
 }
