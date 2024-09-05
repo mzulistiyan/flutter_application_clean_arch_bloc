@@ -32,9 +32,10 @@ class DioClient {
 
   bool isSuccess(int? statusCode) => statusCode == 200 || statusCode == 201;
 
-  /// get
-  Future<Response> get({
+  Future<Response> _request({
+    required String method,
     required String url,
+    dynamic data,
     String? token,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? queryParams,
@@ -42,242 +43,184 @@ class DioClient {
     bool dynamicUrl = false,
   }) async {
     headers ??= {};
-
     if (token != null) headers['Authorization'] = 'Bearer $token';
 
     try {
-      final Response response = await _dio.get(
+      final Response response = await _dio.request(
         dynamicUrl ? url : UrlConstant.baseUrl + url,
+        data: data,
         options: Options(
+          method: method,
           headers: headers,
           contentType: 'application/json',
           responseType: responseType,
         ),
         queryParameters: queryParams,
       );
-
       return response;
     } catch (e) {
       rethrow;
     }
   }
 
-  /// post
+  Future<Response> get({
+    required String url,
+    String? token,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? queryParams,
+    ResponseType responseType = ResponseType.json,
+    bool dynamicUrl = false,
+  }) =>
+      _request(
+        method: 'GET',
+        url: url,
+        token: token,
+        headers: headers,
+        queryParams: queryParams,
+        responseType: responseType,
+        dynamicUrl: dynamicUrl,
+      );
+
   Future<Response> post({
     required String url,
     dynamic data,
     String? token,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? queryParams,
-  }) async {
-    headers ??= {};
-
-    if (token != null) headers['Authorization'] = 'Bearer $token';
-
-    try {
-      final Response response = await _dio.post(
-        UrlConstant.baseUrl + url,
+  }) =>
+      _request(
+        method: 'POST',
+        url: url,
         data: data,
-        options: Options(
-          headers: headers,
-          contentType: 'application/json',
-          responseType: ResponseType.json,
-        ),
-        queryParameters: queryParams,
+        token: token,
+        headers: headers,
+        queryParams: queryParams,
       );
 
-      return response;
-    } catch (e) {
-      rethrow;
-    }
-  }
-
-  /// patch
   Future<Response> patch({
     required String url,
     dynamic data,
     String? token,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? queryParams,
-  }) async {
-    headers ??= {};
-
-    if (token != null) headers['Authorization'] = 'Bearer $token';
-
-    try {
-      final Response response = await _dio.patch(
-        UrlConstant.baseUrl + url,
+  }) =>
+      _request(
+        method: 'PATCH',
+        url: url,
         data: data,
-        options: Options(
-          headers: headers,
-          contentType: 'application/json',
-          responseType: ResponseType.json,
-        ),
-        queryParameters: queryParams,
+        token: token,
+        headers: headers,
+        queryParams: queryParams,
       );
 
-      return response;
-    } catch (e) {
-      rethrow;
-    }
-  }
-
-  /// put
   Future<Response> put({
     required String url,
     dynamic data,
     String? token,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? queryParams,
-  }) async {
-    headers ??= {};
-
-    if (token != null) headers['Authorization'] = 'Bearer $token';
-
-    try {
-      final Response response = await _dio.put(
-        UrlConstant.baseUrl + url,
+  }) =>
+      _request(
+        method: 'PUT',
+        url: url,
         data: data,
-        options: Options(
-          headers: headers,
-          contentType: 'application/json',
-          responseType: ResponseType.json,
-        ),
-        queryParameters: queryParams,
+        token: token,
+        headers: headers,
+        queryParams: queryParams,
       );
 
-      return response;
-    } catch (e) {
-      rethrow;
-    }
-  }
-
-  /// delete
   Future<Response> delete({
     required String url,
     dynamic data,
     String? token,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? queryParams,
-  }) async {
-    headers ??= {};
-
-    if (token != null) headers['Authorization'] = 'Bearer $token';
-
-    try {
-      final Response response = await _dio.delete(
-        UrlConstant.baseUrl + url,
+  }) =>
+      _request(
+        method: 'DELETE',
+        url: url,
         data: data,
-        options: Options(
-          headers: headers,
-          contentType: 'application/json',
-          responseType: ResponseType.json,
-        ),
-        queryParameters: queryParams,
+        token: token,
+        headers: headers,
+        queryParams: queryParams,
       );
 
-      return response;
-    } catch (e) {
-      rethrow;
-    }
-  }
-
-  /// refresh token
   Future<Response> refreshToken({
     required String email,
     required String password,
-  }) async {
-    try {
-      final Response response = await _dio.post(
-        UrlConstant.baseUrl + UrlConstant.login,
-        data: {
-          'email': email,
-          'password': password,
-          'mode': 'json',
-        },
+  }) =>
+      _request(
+        method: 'POST',
+        url: UrlConstant.login,
+        data: {'email': email, 'password': password, 'mode': 'json'},
       );
-
-      return response;
-    } catch (e) {
-      rethrow;
-    }
-  }
 }
 
 class LoggingInterceptor extends Interceptor {
   final Logger logger;
 
-  LoggingInterceptor({
-    required this.logger,
-  });
+  LoggingInterceptor({required this.logger});
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     if (kDebugMode) {
-      // Log request details
       logger.d(
         "Request: ${options.method} ${options.path}\nHeaders: ${options.headers}\nQuery Parameters: ${options.queryParameters}\nBody: ${options.data}",
       );
     }
-    // Continue with request
     super.onRequest(options, handler);
   }
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) async {
     if (kDebugMode) {
-      // Log response details
-      logger.d("Response: ${response.requestOptions.path}\nStatus Code: ${response.statusCode}\nData: ${isXmlString(response.data) ? 'XML' : response.data}");
-      if (response.statusCode == 401 && response.data['errors'][0]['extensions']['code'] == 'TOKEN_EXPIRED') {
-        SharedPrefClient sharedPrefClient = SharedPrefClient.instance;
-        DioClient dioClient = DioClient._instance;
-        String email = await sharedPrefClient.getByKey(
-              key: SharedPrefKey.authEmail,
-            ) ??
-            '';
-        String password = await sharedPrefClient.getByKey(
-              key: SharedPrefKey.authPassword,
-            ) ??
-            '';
-        Response responseRefreshToken = await dioClient.refreshToken(email: email, password: password);
-
-        if (responseRefreshToken.statusCode == 200) {
-          String accessToken = responseRefreshToken.data['data']['access_token'];
-
-          // save access token to local storage
-          await sharedPrefClient.saveKey(
-            key: SharedPrefKey.accessToken,
-            data: accessToken,
-          );
-
-          final clonedRequest = await dioClient._dio.request(
-            response.requestOptions.path,
-            options: Options(
-              headers: {
-                'Authorization': 'Bearer $accessToken',
-              },
-              contentType: 'application/json',
-              responseType: ResponseType.json,
-            ),
-            data: response.requestOptions.data,
-            queryParameters: response.requestOptions.queryParameters,
-          );
-
-          return handler.resolve(clonedRequest);
-        }
-      }
+      logger.d(
+        "Response: ${response.requestOptions.path}\nStatus Code: ${response.statusCode}\nData: ${isXmlString(response.data) ? 'XML' : response.data}",
+      );
+      // if (response.statusCode == 401) {
+      //   await _handleTokenExpired(response, handler);
+      //   // return;
+      // }
     }
-    // Continue with response
     super.onResponse(response, handler);
+  }
+
+  Future<void> _handleTokenExpired(
+      Response response, ResponseInterceptorHandler handler) async {
+    SharedPrefClient sharedPrefClient = SharedPrefClient.instance;
+    DioClient dioClient = DioClient._instance;
+    String email =
+        await sharedPrefClient.getByKey(key: SharedPrefKey.authEmail) ?? '';
+    String password =
+        await sharedPrefClient.getByKey(key: SharedPrefKey.authPassword) ?? '';
+    Response responseRefreshToken =
+        await dioClient.refreshToken(email: email, password: password);
+
+    if (responseRefreshToken.statusCode == 200) {
+      String accessToken = responseRefreshToken.data['data']['access_token'];
+      await sharedPrefClient.saveKey(
+          key: SharedPrefKey.accessToken, data: accessToken);
+
+      final clonedRequest = await dioClient._dio.request(
+        response.requestOptions.path,
+        options: Options(
+          headers: {'Authorization': 'Bearer $accessToken'},
+          contentType: 'application/json',
+          responseType: ResponseType.json,
+        ),
+        data: response.requestOptions.data,
+        queryParameters: response.requestOptions.queryParameters,
+      );
+
+      handler.resolve(clonedRequest);
+    }
   }
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
     if (kDebugMode) {
-      // Log error details
       logger.e("Error: ${err.type} ${err.message}");
     }
-    // Continue with error handling
     super.onError(err, handler);
   }
 
