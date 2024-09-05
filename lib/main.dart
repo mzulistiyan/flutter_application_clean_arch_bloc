@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'common/common.dart';
 import 'injection.dart' as di;
-
-import 'presentation/assessment/bloc/list_assessment_bloc.dart';
-import 'presentation/assessment/screen/list_assessment_screen.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await di.init();
+  //Local initialization
+  initializeDateFormatting();
+
   runApp(const MyApp());
 }
 
@@ -17,34 +20,30 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    SizeConfig().init(context);
     return MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create: (context) => di.locator<ListAssessmentBloc>(),
-        ),
-      ],
-      child: MaterialApp(
-        title: 'Flutter Demo',
+      providers: [],
+      child: MaterialApp.router(
+        routeInformationProvider: AppRouter.router.routeInformationProvider,
+        routeInformationParser: AppRouter.router.routeInformationParser,
+        routerDelegate: AppRouter.router.routerDelegate,
+        title: 'App',
+        builder: EasyLoading.init(),
         theme: ThemeData(
-          // This is the theme of your application.
-          //
-          // TRY THIS: Try running your application with "flutter run". You'll see
-          // the application has a blue toolbar. Then, without quitting the app,
-          // try changing the seedColor in the colorScheme below to Colors.green
-          // and then invoke "hot reload" (save your changes or press the "hot
-          // reload" button in a Flutter-supported IDE, or press "r" if you used
-          // the command line to start the app).
-          //
-          // Notice that the counter didn't reset back to zero; the application
-          // state is not lost during the reload. To reset the state, use hot
-          // restart instead.
-          //
-          // This works for code too, not just values: Most code changes can be
-          // tested with just a hot reload.
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          scaffoldBackgroundColor: Colors.white,
+          primarySwatch: Colors.grey,
           useMaterial3: true,
+          colorScheme: ColorScheme.fromSwatch().copyWith(
+            primary: ColorConstant.primaryColor,
+            secondary: ColorConstant.secondaryColor,
+          ),
+          fontFamily: 'DM Sans',
+          // appBarTheme: AppBarTheme(
+          //   foregroundColor: Colors.white,
+          //   backgroundColor: Colors.white,
+          //   surfaceTintColor: Colors.white,
+          // ),
         ),
-        home: ListAssessmentScreen(),
       ),
     );
   }
